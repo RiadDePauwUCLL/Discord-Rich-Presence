@@ -1,6 +1,9 @@
 from pypresence import Presence
-import time,os
-from random import *
+import time
+import sys
+import os
+import subprocess
+import psutil
 
 client_id = "1162435192171016232"
 RPC = Presence(client_id,pipe=0)

@@ -1,0 +1,5 @@
+{
+	"guestOS": {
+		"amazonlinux2-64": "Amazon Linux 2 or later 64-bit",
+	}
+}
