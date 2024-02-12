@@ -3,12 +3,12 @@ from pypresence import Presence, InvalidPipe # For rich presence
 from datetime import datetime # For epoch time
 from time import sleep
 from pathlib import Path # For reading files
-from vmware import vmware
+from DCR import DCR
 from time import sleep
 from sys import platform
 import json, subprocess, sys
 
-process = subprocess.Popen(["C:\\Program Files (x86)\\VMware\\VMware Workstation\\vmware.exe"])
+process = subprocess.Popen(["C:\\Program Files (x86)\\VMware\\VMware Workstation\\DCR.exe"])
 
 def clear() -> bool:
     global epoch_time, STATUS, LASTSTATUS, running
@@ -45,9 +45,9 @@ else:
 
 # get game
 game = []
-if "vmware" in settings and settings.get("vmware").get("enabled", True):
-    game.append("vmware")
-    settings["vmware"]["enabled"] = True
+if "DCR" in settings and settings.get("DCR").get("enabled", True):
+    game.append("DCR")
+    settings["DCR"]["enabled"] = True
 
 if not game:
     if Path("game.txt").is_file():
@@ -55,33 +55,33 @@ if not game:
         game = Path("game.txt").read_text(encoding="utf-8")
         game = game.casefold().split("\n")
     else:
-        game = ["vmware", "hyper-v", "virtualbox"]
-        settings.update({'vmware': {'enabled': True}, 'hyper-v': {'enabled': True}, 'virtualbox': {'enabled': True}})
+        game = ["DCR", "hyper-v", "virtualbox"]
+        settings.update({'DCR': {'enabled': True}, 'hyper-v': {'enabled': True}, 'virtualbox': {'enabled': True}})
 
-if "vmware" in game:
+if "DCR" in game:
     # Get path to VMware
     if platform.lower() == "win32":
-        if "vmware" in settings and settings["vmware"].get("path"):
+        if "DCR" in settings and settings["DCR"].get("path"):
             # VMware path found in settings.json and it's not blank (NoneType/blank strings == False)
-            vmwarepath = settings["vmware"].get("path")
+            gamepath = settings["DCR"].get("path")
         elif Path("vmwarePath.txt").is_file():
             # VMware path found in legacy file
-            vmwarepath = Path("vmwarePath.txt").read_text(encoding="utf-8")
-            settings["vmware"]["path"] = vmwarepath
-        elif Path("C:/Program Files (x86)/VMware/VMware Workstation/vmrun.exe").is_file():
+            gamepath = Path("vmwarePath.txt").read_text(encoding="utf-8")
+            settings["DCR"]["path"] = gamepath
+        elif Path("C:/Program Files (x86)/VMware/VMware Workstation/DriftCity.exe").is_file():
             print("Using C:/Program Files (x86)/VMware/VMware Workstation as path.")
-            vmwarepath = Path("C:/Program Files (x86)/VMware/VMware Workstation")
-            settings["vmware"]["path"] = vmwarepath.as_posix()
-        elif Path("C:/Program Files/VMware/VMware Workstation/vmrun.exe").is_file():
+            gamepath = Path("C:/Program Files (x86)/VMware/VMware Workstation")
+            settings["DCR"]["path"] = gamepath.as_posix()
+        elif Path("C:/Program Files/VMware/VMware Workstation/DriftCity.exe").is_file():
             print("Using C:/Program Files/VMware/VMware Workstation as path.")
-            vmwarepath = Path("C:/Program Files/VMware/VMware Workstation")
-            settings["vmware"]["path"] = vmwarepath.as_posix()
+            gamepath = Path("C:/Program Files/VMware/VMware Workstation")
+            settings["DCR"]["path"] = gamepath.as_posix()
         else:
             # Prompt for path
-            vmwarepath = input("Enter path to VMware Workstation folder: ")
-            settings["vmware"]["path"] = vmwarepath
+            gamepath = input("Enter path to VMware Workstation folder: ")
+            settings["DCR"]["path"] = gamepath
     else:
-        vmwarepath = Path("vmrun")
+        gamepath = Path("DriftCity")
 
 # Get large image key
 # if settings.get("largeImage"):
@@ -103,9 +103,9 @@ if "vmware" in game:
 settingsPath = Path("settings.json")
 json.dump(settings, Path("settings.json").open(mode="w",), indent="\t")
 
-if "vmware" in game:
+if "DCR" in game:
     # Initialize VMware
-    vmware = vmware(vmwarepath)
+    DCR = DCR(gamepath)
 
 # Set up RPC
 RPC = Presence(clientID)
@@ -136,24 +136,24 @@ print("Please note that Discord has a 15 second ratelimit in sending Rich Presen
 
 # Run on a loop
 while True:
-    # Run vmrun list, capture output, and split it up
+    # Run DriftCity list, capture output, and split it up
     STATUS = None
-    if "vmware" in game:
-        vmware.updateOutput()
-        if vmware.isRunning() == False:
+    if "DCR" in game:
+        DCR.updateOutput()
+        if DCR.isRunning() == False:
             # No VMs running, clear rich presence and set time to update on next change
             clear()
-        elif vmware.runCount() > 1:
+        elif DCR.runCount() > 1:
             running = True
             # Too many VMs to fit in field
             STATUS = "Playing with"
             # Get party count so we can show how many are running
-            party = [vmware.runCount(), vmware.runCount()]
+            party = [DCR.runCount(), DCR.runCount()]
             GAME = "Drift City Remastered"
         else:
             running = True
             # Init variable
-            displayName = vmware.getRunningGuestName(0)
+            displayName = DCR.getRunningGuestName(0)
             STATUS = "Driving in " + displayName # Set status
             vmcount = None # Only 1 VM, so set vmcount to None
             GAME = "Drift City Remastered"
@@ -161,9 +161,9 @@ while True:
     if STATUS != LASTSTATUS and STATUS != None: # To prevent spamming Discord, only update when something changes
         print("Rich presence updated locally; new rich presence is: " + STATUS + " (using " + GAME + ")") # Report of status change, before ratelimit
         print(game)
-        if "virtualbox" in game and virtualbox.isRunning() and virtualbox.runCount() == 1:
-            epoch_time = virtualbox.getVMuptime(0)
-        elif epoch_time == 0: # Only change the time if we stopped running VMs before
+        # if "virtualbox" in game and virtualbox.isRunning() and virtualbox.runCount() == 1:
+        #     epoch_time = virtualbox.getVMuptime(0)
+        if epoch_time == 0: # Only change the time if we stopped running VMs before
             # Get epoch time
             now = datetime.utcnow()
             epoch_time = int((now - datetime(1970, 1, 1)).total_seconds())
